@@ -5,11 +5,16 @@ using MLAgents;
 public class ElevatorAcademy : Academy
 {
 
-	// Use this for initialization
-	void Start ()
+    // Use this for initialization
+
+    Building building;
+
+ 
+
+    void Start ()
     {
-		
-	}
+       
+    }
 	
 	// Update is called once per frame
 	void Update ()
@@ -20,12 +25,12 @@ public class ElevatorAcademy : Academy
 
     public override void InitializeAcademy()
     {
-
+        building = FindObjectOfType<Building>();
+        building.InitEnv();
     }
 
     public override void AcademyStep()
     {
-
-
+        building.UpdateEnv();
     }
 }
