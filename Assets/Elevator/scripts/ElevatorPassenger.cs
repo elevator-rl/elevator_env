@@ -1,11 +1,17 @@
-﻿using System.Collections;
+﻿
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ElevatorPassenger
+public class ElevatorPassenger:  PoolObj<ElevatorPassenger>
 {
 
     public int startFloor,destFloor;
+
+
+    public ElevatorPassenger()
+    {
+     
+    }
 
 
 

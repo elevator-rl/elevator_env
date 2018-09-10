@@ -4,14 +4,17 @@ using UnityEngine;
 
 public class Floor : MonoBehaviour
 {
+
+ 
+
     public GameObject callFloorBtn;
     public GameObject destFloorBtn;
 
 	// Use this for initialization
 	void Start ()
     {
-		
-	}
+   
+    }
 	
 	// Update is called once per frame
 	void Update ()

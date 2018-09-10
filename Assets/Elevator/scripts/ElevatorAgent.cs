@@ -31,6 +31,7 @@ public class ElevatorAgent : Agent
 
 
     float preUpdateTime = 0;
+    float coolTime = 0;
 
     public enum MOVE_DIR
     {
@@ -200,6 +201,9 @@ public class ElevatorAgent : Agent
             return;
         }
 
+        if (coolTime > Time.fixedTime)
+            return;
+
         Vector3 movePos = car.transform.position + Vector3.up * moveDirState * moveSpeed * delta;
         car.transform.position = movePos;
 
@@ -207,12 +211,14 @@ public class ElevatorAgent : Agent
         {
             car.transform.position = listFloor[listFloor.Length - 1].transform.position;
             SetDirction(MOVE_DIR.Down);
+            coolTime = preUpdateTime + 1.0f;
 
         }
         else if (car.transform.position.y < listFloor[0].transform.position.y)
         {
             car.transform.position = listFloor[0].transform.position;
             SetDirction(MOVE_DIR.Up);
+            coolTime = preUpdateTime + 1.0f;
         }
 
     }
