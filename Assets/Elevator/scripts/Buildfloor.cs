@@ -6,8 +6,7 @@ using TMPro;
 public class Buildfloor : MonoBehaviour
 {
 
-    static ElevatorAcademy academy;
-    static int maxFloor;
+    
 
 
     public TextMeshPro textUp;
@@ -27,13 +26,6 @@ public class Buildfloor : MonoBehaviour
 	void Start ()
     {
         passingerCount = 0;
-
-        if (academy == null)
-        {
-            academy = Object.FindObjectOfType<ElevatorAcademy>();
-            maxFloor = (int)academy.resetParameters["floor"];
-        }
-
 
     }
 
@@ -79,7 +71,7 @@ public class Buildfloor : MonoBehaviour
 
             while(true)
             {
-                p.destFloor = Random.Range(1, maxFloor + 1);
+                p.destFloor = Random.Range(1, ElevatorAcademy.floors + 1);
                 if (p.destFloor != p.startFloor)
                     break;      
             }           

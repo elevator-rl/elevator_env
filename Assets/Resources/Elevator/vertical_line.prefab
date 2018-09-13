@@ -60,7 +60,7 @@ GameObject:
   - component: {fileID: 120993101621638250}
   - component: {fileID: 114266403223550550}
   m_Layer: 0
-  m_Name: floor
+  m_Name: vertical_line
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -345,6 +345,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   callFloorBtn: {fileID: 1396389331214620}
   destFloorBtn: {fileID: 1187150734614912}
+  line: {fileID: 120993101621638250}
 --- !u!114 &114661613160349756
 MonoBehaviour:
   m_ObjectHideFlags: 1

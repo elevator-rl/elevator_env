@@ -6,13 +6,7 @@ using TMPro;
 
 public class ElevatorAgent : Agent
 {
-    public static float moveSpeed = 1.5f;
-
-    public static float doorDelay = 2f;
-
-    public static float takeOnOffDelay = 2f;
-
-    public static float height = 3f;
+ 
 
     static GameObject resFloor;
 
@@ -57,7 +51,7 @@ public class ElevatorAgent : Agent
     public void InitFloor(int no, int floor)
     {
         if (resFloor == null)
-            resFloor = (GameObject)Resources.Load("Elevator/floor");
+            resFloor = (GameObject)Resources.Load("Elevator/vertical_line");
 
         textNo.text = no.ToString();
 
@@ -96,7 +90,7 @@ public class ElevatorAgent : Agent
                 else
                     of = listFloor[f];
 
-                of.transform.position = transform.position + (Vector3.up * f * height);
+                of.transform.position = transform.position + (Vector3.up * f * ElevatorAcademy.height);
                 temp[f] = of;
             }
 
@@ -110,7 +104,7 @@ public class ElevatorAgent : Agent
             for (int f = 0; f < floor; ++f)
             {
                 GameObject of = (GameObject)Instantiate(resFloor, transform);
-                of.transform.position = transform.position + (Vector3.up * f * height);
+                of.transform.position = transform.position + (Vector3.up * f * ElevatorAcademy.height);
                 listFloor[f] = of;
 
             }
@@ -157,11 +151,11 @@ public class ElevatorAgent : Agent
     {
         if (listFloor == null || floor >= listFloor.Length)
         {
-            Debug.LogError(string.Format("No:{0} SetLeaveFloor Floor{1} Error", textNo.text, floor));
+            Debug.LogError(string.Format("No:{0} SetLeaveFloor VerticalLine{1} Error", textNo.text, floor));
             return;
         }
 
-        listFloor[floor].GetComponent<Floor>().SetDestResquest(bOn);
+        listFloor[floor].GetComponent<VerticalLine>().SetDestResquest(bOn);
 
     }
 
@@ -169,16 +163,16 @@ public class ElevatorAgent : Agent
     {
         if (listFloor == null || floor >= listFloor.Length)
         {
-            Debug.LogError(string.Format("No:{0} SetCallFloor Floor{0} Error", textNo.text, floor));
+            Debug.LogError(string.Format("No:{0} SetCallFloor VerticalLine{0} Error", textNo.text, floor));
             return;
         }
 
-        listFloor[floor].GetComponent<Floor>().SetDestResquest(bOn);
+        listFloor[floor].GetComponent<VerticalLine>().SetDestResquest(bOn);
     }
 
     public void SetPosFloor(int floor)
     {
-        car.transform.position = transform.position + (Vector3.up * floor * height);
+        car.transform.position = transform.position + (Vector3.up * floor * ElevatorAcademy.height);
     }
 
 
@@ -204,21 +198,21 @@ public class ElevatorAgent : Agent
         if (coolTime > Time.fixedTime)
             return;
 
-        Vector3 movePos = car.transform.position + Vector3.up * moveDirState * moveSpeed * delta;
+        Vector3 movePos = car.transform.position + Vector3.up * moveDirState * ElevatorAcademy.speed * delta;
         car.transform.position = movePos;
 
         if (car.transform.position.y > listFloor[listFloor.Length - 1].transform.position.y)
         {
             car.transform.position = listFloor[listFloor.Length - 1].transform.position;
             SetDirction(MOVE_DIR.Down);
-            coolTime = preUpdateTime + 1.0f;
+            coolTime = preUpdateTime + ElevatorAcademy.turn; ;
 
         }
         else if (car.transform.position.y < listFloor[0].transform.position.y)
         {
             car.transform.position = listFloor[0].transform.position;
             SetDirction(MOVE_DIR.Up);
-            coolTime = preUpdateTime + 1.0f;
+            coolTime = preUpdateTime + ElevatorAcademy.turn;
         }
 
     }

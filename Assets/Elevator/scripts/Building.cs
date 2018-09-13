@@ -15,8 +15,7 @@ public class Building : MonoBehaviour
     static GameObject resElevator;
     static GameObject resfloor;
     static float simulation_interval = 3f;
-    static int elevatorCount;
-    static int floors;
+  
    
 
 
@@ -24,7 +23,7 @@ public class Building : MonoBehaviour
     List<GameObject> listFloor = new List<GameObject>();
 
 
-    int episodeTotalPassinger ;
+    static int episodeTotalPassinger ;
 
     int currentPassinger;
     int restPassinger;
@@ -61,14 +60,13 @@ public class Building : MonoBehaviour
             elevatorBrain = academy.gameObject.transform.Find("ElevatorBrain").GetComponent<MLAgents.Brain>();
 
 
-        floors = (int)academy.resetParameters["floor"];
-        elevatorCount = (int)academy.resetParameters["elevators"];
-        restPassinger = episodeTotalPassinger = (int)academy.resetParameters["passinger"];
+
+        restPassinger = ElevatorAcademy.passinger;
 
 
         int dist = 4;
-        int rest = elevatorCount % 2;
-        int mok = elevatorCount / 2;
+        int rest = ElevatorAcademy.elevatorCount% 2;
+        int mok = ElevatorAcademy.elevatorCount / 2;
 
         Vector3 startPos = transform.position;
         if (rest<0.5f)
@@ -84,21 +82,21 @@ public class Building : MonoBehaviour
         startPos += Vector3.back;
 
 
-        for (int i = listElve.Count; i< elevatorCount; ++i)
+        for (int i = listElve.Count; i< ElevatorAcademy.elevatorCount; ++i)
         {
             GameObject ele = (GameObject)Instantiate(resElevator, this.transform);
             ele.transform.position = startPos + (Vector3.right * dist * i);
             listElve.Add(ele);
             ele.GetComponent<ElevatorAgent>().brain = elevatorBrain;
-            ele.GetComponent<ElevatorAgent>().InitFloor(i+1, floors);
+            ele.GetComponent<ElevatorAgent>().InitFloor(i+1, ElevatorAcademy.floors);
             ele.GetComponent<ElevatorAgent>().OnEnable();
 
         }
 
-        for (int i = 0; i < floors; ++i)
+        for (int i = 0; i < ElevatorAcademy.floors; ++i)
         {
             GameObject fl = (GameObject)Instantiate(resfloor, this.transform);
-            fl.transform.position = transform.position + (Vector3.up * ElevatorAgent.height * i);
+            fl.transform.position = transform.position + (Vector3.up * ElevatorAcademy.height * i);
             fl.GetComponent<Buildfloor>().SetFloor(i + 1);
             listFloor.Add(fl);
 

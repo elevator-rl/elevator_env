@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Floor : MonoBehaviour
+public class VerticalLine : MonoBehaviour
 {
 
  
@@ -10,10 +10,12 @@ public class Floor : MonoBehaviour
     public GameObject callFloorBtn;
     public GameObject destFloorBtn;
 
+    public LineRenderer line;
+
 	// Use this for initialization
 	void Start ()
     {
-   
+        SetHeight(ElevatorAcademy.height);
     }
 	
 	// Update is called once per frame
@@ -21,6 +23,14 @@ public class Floor : MonoBehaviour
     {
 		
 	}
+
+    public void SetHeight(float height)
+    {
+        float z = line.GetPosition(0).z;
+
+        line.SetPosition(0, new Vector3(0, height / 2f, z));
+        line.SetPosition(1, new Vector3(0, -height / 2f, z));
+    }
 
     public void SetCallResquest(bool bCall)
     {
