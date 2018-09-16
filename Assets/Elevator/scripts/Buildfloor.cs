@@ -6,13 +6,13 @@ using TMPro;
 public class Buildfloor : MonoBehaviour
 {
 
-    
-
-
+  
     public TextMeshPro textUp;
     public TextMeshPro textDn;
     public TextMeshPro textPassinger;
     public TextMeshPro textFloor;
+
+    Building building;
 
 
     public List<ElevatorPassenger> listPassinger = new List<ElevatorPassenger>();
@@ -35,8 +35,9 @@ public class Buildfloor : MonoBehaviour
 		
 	}
 
-    public void SetFloor(int floor)
+    public void SetFloor(int floor,Building building_)
     {
+        building = building_;
         textFloor.text = floor.ToString();
         floorNo = floor;
 
@@ -92,6 +93,12 @@ public class Buildfloor : MonoBehaviour
     public void DownButton(bool bOn)
     {
         textDn.gameObject.SetActive(bOn);
+
+        if(downButton != bOn)
+        {
+
+        }
+
         downButton = bOn;
     }
 

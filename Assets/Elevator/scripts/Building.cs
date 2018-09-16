@@ -87,9 +87,9 @@ public class Building : MonoBehaviour
             GameObject ele = (GameObject)Instantiate(resElevator, this.transform);
             ele.transform.position = startPos + (Vector3.right * dist * i);
             listElve.Add(ele);
-            ele.GetComponent<ElevatorAgent>().brain = elevatorBrain;
+            ele.GetComponent<ElevatorAgent>().GiveBrain(elevatorBrain);
             ele.GetComponent<ElevatorAgent>().InitFloor(i+1, ElevatorAcademy.floors);
-            ele.GetComponent<ElevatorAgent>().OnEnable();
+            ele.GetComponent<ElevatorAgent>().AgentReset();
 
         }
 
@@ -97,7 +97,7 @@ public class Building : MonoBehaviour
         {
             GameObject fl = (GameObject)Instantiate(resfloor, this.transform);
             fl.transform.position = transform.position + (Vector3.up * ElevatorAcademy.height * i);
-            fl.GetComponent<Buildfloor>().SetFloor(i + 1);
+            fl.GetComponent<Buildfloor>().SetFloor(i + 1,this);
             listFloor.Add(fl);
 
         }
