@@ -17,10 +17,16 @@ public class Buildfloor : MonoBehaviour
 
     public List<ElevatorPassenger> listPassinger = new List<ElevatorPassenger>();
 
+    public List<ElevatorAgent> LandingElevators = new List<ElevatorAgent>();
+
     int floorNo;
     int passingerCount = 0;
     bool upButton = false;
     bool downButton = false;
+
+    static float checkInterval = 1;
+
+    float checkTime = 0;
 
 	// Use this for initialization
 	void Start ()
@@ -30,10 +36,13 @@ public class Buildfloor : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update ()
+    void FixedUpdate ()
     {
-		
-	}
+        if ((Time.fixedTime-checkTime)>1f)
+            ChkUpDownButton();
+
+
+    }
 
     public void SetFloor(int floor,Building building_)
     {
@@ -72,7 +81,7 @@ public class Buildfloor : MonoBehaviour
 
             while(true)
             {
-                p.destFloor = Random.Range(1, ElevatorAcademy.floors + 1);
+                p.destFloor = Random.Range(0,ElevatorAcademy.floors);
                 if (p.destFloor != p.startFloor)
                     break;      
             }           
@@ -87,6 +96,12 @@ public class Buildfloor : MonoBehaviour
     public void UpButton( bool bOn)
     {
         textUp.gameObject.SetActive(bOn);
+  
+        if (bOn)
+        {
+            building.CallRequest(floorNo, MOVE_DIR.Up);
+        }
+        
         upButton = bOn;
     }
 
@@ -94,9 +109,10 @@ public class Buildfloor : MonoBehaviour
     {
         textDn.gameObject.SetActive(bOn);
 
-        if(downButton != bOn)
-        {
 
+        if (bOn)
+        {
+            building.CallRequest(floorNo, MOVE_DIR.Down);
         }
 
         downButton = bOn;
@@ -123,7 +139,52 @@ public class Buildfloor : MonoBehaviour
         UpButton(up);
         DownButton(dn);
 
+
+        checkTime = Time.fixedTime;
+
     }
+
+    public void EnterElevator(ElevatorAgent el)
+    {
+
+        if (floorNo != el.GetFloor() || !el.IsEnterableState())
+            return;
+
+        float delay=0;
+
+        int idx = 0;
+        while(idx< listPassinger.Count)
+        {
+
+            if (!el.IsEnterableState())
+                break;
+
+            if (el.AddPassinger(listPassinger[idx]))
+            {
+                listPassinger.RemoveAt(idx);
+                delay += Random.Range(0.6f, 1.0f);
+            }
+            else
+                ++idx;
+            
+        }
+
+
+        textPassinger.text = listPassinger.Count.ToString();
+
+
+        if(el.GetDir() == (int)MOVE_DIR.Up)
+            UpButton(false);
+        else
+            DownButton(false);
+
+
+        LandingElevators.Add(el);
+        return;
+
+    }
+
+   
 
 }
 

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using MLAgents;
 
 
 
@@ -8,7 +9,7 @@ public class Building : MonoBehaviour
 {
 
     static ElevatorAcademy academy;
-    static MLAgents.Brain elevatorBrain;
+    public static Brain elevatorBrain;
 
     // Use this for initialization
 
@@ -19,8 +20,10 @@ public class Building : MonoBehaviour
    
 
 
-    List<GameObject> listElve = new List<GameObject>();
-    List<GameObject> listFloor = new List<GameObject>();
+    List<ElevatorAgent> listElve = new List<ElevatorAgent>();
+    List<Buildfloor> listFloor = new List<Buildfloor>();
+
+    ElevatorAgent[,] callReqReserveCar;
 
 
     static int episodeTotalPassinger ;
@@ -52,6 +55,8 @@ public class Building : MonoBehaviour
         if (academy ==null)
             academy = FindObjectOfType<ElevatorAcademy>();
 
+
+        callReqReserveCar = new ElevatorAgent[ElevatorAcademy.floors, 2];
 
         ElevatorPassenger.InitPooler();
 
@@ -86,10 +91,12 @@ public class Building : MonoBehaviour
         {
             GameObject ele = (GameObject)Instantiate(resElevator, this.transform);
             ele.transform.position = startPos + (Vector3.right * dist * i);
-            listElve.Add(ele);
-            ele.GetComponent<ElevatorAgent>().GiveBrain(elevatorBrain);
-            ele.GetComponent<ElevatorAgent>().InitFloor(i+1, ElevatorAcademy.floors);
-            ele.GetComponent<ElevatorAgent>().AgentReset();
+
+            var agent = ele.GetComponent<ElevatorAgent>();
+            listElve.Add(agent);
+            agent.GiveBrain(elevatorBrain);
+            agent.InitFloor(i, ElevatorAcademy.floors);
+            agent.AgentReset();
 
         }
 
@@ -97,8 +104,8 @@ public class Building : MonoBehaviour
         {
             GameObject fl = (GameObject)Instantiate(resfloor, this.transform);
             fl.transform.position = transform.position + (Vector3.up * ElevatorAcademy.height * i);
-            fl.GetComponent<Buildfloor>().SetFloor(i + 1,this);
-            listFloor.Add(fl);
+            fl.GetComponent<Buildfloor>().SetFloor(i,this);
+            listFloor.Add(fl.GetComponent<Buildfloor>());
 
         }
 
@@ -109,6 +116,7 @@ public class Building : MonoBehaviour
     {
 
         SimulationFloorPassinger();
+        SimulationEnterElevator();
 
         UpdatePos();
     }
@@ -117,7 +125,7 @@ public class Building : MonoBehaviour
     {
         foreach (var e in listElve)
         {
-            e.GetComponent<ElevatorAgent>().UpdatePos();
+            e.UpdateAction();
         }
     }
 
@@ -127,7 +135,7 @@ public class Building : MonoBehaviour
         if (simulattion_time > Time.fixedTime)
             return;
 
-        if (currentPassinger > episodeTotalPassinger * 0.4)
+        if (currentPassinger > episodeTotalPassinger * 0.3)
             return;
 
         int newPassinger = Random.Range(0, restPassinger+1);
@@ -147,5 +155,82 @@ public class Building : MonoBehaviour
         simulattion_time = Time.fixedTime + 5f;
     }
 
-    
+
+    public void SimulationEnterElevator()
+    {
+
+        for (int i = 0; i < listFloor.Count; ++i)
+        {
+            foreach(var el in listElve)
+            {
+                listFloor[i].EnterElevator(el);
+            }
+        }
+
+    }
+
+
+    public void CallRequest(int floor, MOVE_DIR dir)
+    {
+      
+        switch(elevatorBrain.brainType)
+        {
+            case BrainType.Player:
+            case BrainType.Heuristic:
+                SearchNearstElevator(floor, dir);
+                break;
+
+            case BrainType.External:
+            case BrainType.Internal:
+                break;
+
+
+            default:
+                break;
+        }
+        
+    }
+
+    public int SearchNearstElevator(int floor,MOVE_DIR dir)
+    {
+
+        float min = 1000000f;
+        float dist = 0;
+        int buttonDir = 0;
+
+        if(dir != MOVE_DIR.Down)
+        {
+            buttonDir = 1;
+        }
+       
+
+        foreach(var e in listElve)
+        {
+            dist = e.GetFloorDist(floor, dir);
+
+            if (dist < min)
+            {
+                callReqReserveCar[floor, buttonDir] = e;
+                min = dist;
+            }
+        }
+
+        if (callReqReserveCar[floor, buttonDir] != null)
+        {
+            var el = callReqReserveCar[floor, buttonDir];
+            el.SetCallRequest(floor, dir);
+            return el.GetNo();
+        }
+
+        return -1;
+    }
+
+
+    private void OnGUI()
+    {
+        
+    }
+
+
+
 }
