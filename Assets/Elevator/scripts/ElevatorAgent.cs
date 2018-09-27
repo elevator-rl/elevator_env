@@ -226,10 +226,86 @@ public class ElevatorAgent : Agent
 
     public override void CollectObservations()
     {
-        for (int i = 0; i < brain.brainParameters.vectorObservationSize; ++i)
-            AddVectorObs(0);
+        //for (int i = 0; i < brain.brainParameters.vectorObservationSize; ++i)
+        //    AddVectorObs(0);
+
+        ///옵저베이션정보 설정
+        ///
+
+        AddVectorObs(GetFloor());   ///헌재 층수
+        AddVectorObs((int)GetMoveState());  ///이동방향
+        AddVectorObs((int)fsm.GetCurrentState());
+        AddVectorObs(listPassinger.Count);
+
+        for(int i = 0;i<floorBtnflag.Length;++i)
+        {
+            AddVectorObs(floorBtnflag[i]);
+        }
 
     }
+
+    /*
+    public override void SendInfoToBrain()
+    {
+        if (brain == null)
+        {
+            return;
+        }
+        s
+        info.memories = action.memories;
+        info.storedVectorActions = action.vectorActions;
+        info.storedTextActions = action.textActions;
+        info.vectorObservation.Clear();
+        actionMasker.ResetMask();
+        CollectObservations();
+        info.actionMasks = actionMasker.GetMask();
+
+        BrainParameters param = brain.brainParameters;
+        if (info.vectorObservation.Count != param.vectorObservationSize)
+        {
+            throw new UnityAgentsException(string.Format(
+                "Vector Observation size mismatch between continuous " +
+                "agent {0} and brain {1}. " +
+                "Was Expecting {2} but received {3}. ",
+                gameObject.name, brain.gameObject.name,
+                brain.brainParameters.vectorObservationSize,
+                info.vectorObservation.Count));
+        }
+
+        info.stackedVectorObservation.RemoveRange(
+            0, param.vectorObservationSize);
+        info.stackedVectorObservation.AddRange(info.vectorObservation);
+
+        info.visualObservations.Clear();
+        if (param.cameraResolutions.Length > agentParameters.agentCameras.Count)
+        {
+            throw new UnityAgentsException(string.Format(
+                "Not enough cameras for agent {0} : Bain {1} expecting at " +
+                "least {2} cameras but only {3} were present.",
+                gameObject.name, brain.gameObject.name,
+                brain.brainParameters.cameraResolutions.Length,
+                agentParameters.agentCameras.Count));
+        }
+
+        for (int i = 0; i < brain.brainParameters.cameraResolutions.Length; i++)
+        {
+            ObservationToTexture(
+                agentParameters.agentCameras[i],
+                param.cameraResolutions[i].width,
+                param.cameraResolutions[i].height,
+                ref textureArray[i]);
+            info.visualObservations.Add(textureArray[i]);
+        }
+
+        info.reward = reward;
+        info.done = done;
+        info.maxStepReached = maxStepReached;
+        info.id = id;
+
+        brain.SendState(this, info);
+        info.textObservation = "";
+    }
+    */
 
     // to be implemented by the developer
     public override void AgentAction(float[] vectorAction, string textAction)

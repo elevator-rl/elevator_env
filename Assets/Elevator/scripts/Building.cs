@@ -96,6 +96,7 @@ public class Building : MonoBehaviour
             listElve.Add(agent);
             agent.GiveBrain(elevatorBrain);
             agent.InitFloor(i, ElevatorAcademy.floors);
+            agent.agentParameters.agentCameras[0] = GameObject.Find("agent_cam").GetComponent<Camera>();
             agent.AgentReset();
 
         }
