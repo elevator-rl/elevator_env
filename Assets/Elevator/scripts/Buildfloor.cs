@@ -6,21 +6,27 @@ using TMPro;
 public class Buildfloor : MonoBehaviour
 {
 
-    
 
-
-    public TextMeshPro textUp;
-    public TextMeshPro textDn;
+    public TextMeshPro[] textCallButton = new TextMeshPro[(int)MOVE_STATE.end];
     public TextMeshPro textPassinger;
     public TextMeshPro textFloor;
+
+    Building building;
 
 
     public List<ElevatorPassenger> listPassinger = new List<ElevatorPassenger>();
 
+    public List<ElevatorAgent> LandingElevators = new List<ElevatorAgent>();
+
+    public ElevatorAgent[] callReservedEl = new ElevatorAgent[(int)MOVE_STATE.end];
+
     int floorNo;
     int passingerCount = 0;
-    bool upButton = false;
-    bool downButton = false;
+   
+
+    static float checkInterval = 1;
+
+    float checkTime = 0;
 
 	// Use this for initialization
 	void Start ()
@@ -30,27 +36,47 @@ public class Buildfloor : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update ()
+    void FixedUpdate ()
     {
-		
-	}
+        if ((Time.fixedTime-checkTime)>1f)
+            ChkUpDownButton();
 
-    public void SetFloor(int floor)
+    }
+
+    public int GetFloorNo()
     {
+        return floorNo;
+    }
+
+    
+    public bool IsCallRequest(MOVE_STATE dir)
+    {
+        if (textCallButton[(int)dir] == null
+            || !textCallButton[(int)dir].gameObject.activeSelf)
+            return false;
+
+
+        return true;
+
+    }
+
+    public bool IsNoCall()
+    {
+        if (textCallButton[(int)MOVE_STATE.Down].gameObject.activeSelf
+            || textCallButton[(int)MOVE_STATE.Up].gameObject.activeSelf)
+            return false;
+
+        return true;
+    }
+
+    public void SetFloor(int floor,Building building_)
+    {
+        building = building_;
         textFloor.text = floor.ToString();
         floorNo = floor;
 
     }
 
-    public  void OnUpButton(bool bOn = true)
-    {
-        textUp.gameObject.SetActive(bOn);
-    }
-
-    public void OnDownButton(bool bOn = true)
-    {
-        textDn.gameObject.SetActive(bOn);
-    }
 
 
     public void SetPassinger(int passinger)
@@ -71,7 +97,7 @@ public class Buildfloor : MonoBehaviour
 
             while(true)
             {
-                p.destFloor = Random.Range(1, ElevatorAcademy.floors + 1);
+                p.destFloor = Random.Range(0,ElevatorAcademy.floors);
                 if (p.destFloor != p.startFloor)
                     break;      
             }           
@@ -83,22 +109,17 @@ public class Buildfloor : MonoBehaviour
         ChkUpDownButton();
     }
 
-    public void UpButton( bool bOn)
-    {
-        textUp.gameObject.SetActive(bOn);
-        upButton = bOn;
-    }
 
-    public void DownButton(bool bOn)
+    public void SetButton(MOVE_STATE dir,bool bOn)
     {
-        textDn.gameObject.SetActive(bOn);
-        downButton = bOn;
-    }
+        textCallButton[(int)dir].gameObject.SetActive(bOn);
 
+        if (bOn)
+            building.CallRequest(floorNo, dir);
+    }
 
     public void ChkUpDownButton()
     {
-
         bool up = false, dn = false;
 
         foreach(var p in listPassinger)
@@ -113,10 +134,50 @@ public class Buildfloor : MonoBehaviour
             }
         }
 
-        UpButton(up);
-        DownButton(dn);
+        SetButton(MOVE_STATE.Up, up);
+        SetButton(MOVE_STATE.Down, dn);
+
+        checkTime = Time.fixedTime;
 
     }
+
+    public void EnterElevator(ElevatorAgent el)
+    {
+
+        if (floorNo != (int)el.GetFloor() || !el.IsEnterableState())
+            return;
+
+        float delay=0;
+
+        int idx = 0;
+        while(idx< listPassinger.Count)
+        {
+
+            if (!el.IsEnterableState())
+                break;
+
+            if (el.AddPassinger(listPassinger[idx]))
+            {
+                listPassinger.RemoveAt(idx);
+                delay += Random.Range(0.6f, 1.0f);
+            }
+            else
+                ++idx;
+            
+        }
+
+
+        textPassinger.text = listPassinger.Count.ToString();
+
+       
+        LandingElevators.Add(el);
+        return;
+
+    }
+
+   
+
+   
 
 }
 

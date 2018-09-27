@@ -559,10 +559,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22b91c32b97246b46bc3875c8cae41a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  textUp: {fileID: 114161556053481936}
-  textDn: {fileID: 114619481327883078}
+  textCallButton:
+  - {fileID: 0}
+  - {fileID: 114619481327883078}
+  - {fileID: 114161556053481936}
   textPassinger: {fileID: 114791414780130986}
   textFloor: {fileID: 114953984198076248}
+  LandingElevators: []
 --- !u!114 &114791414780130986
 MonoBehaviour:
   m_ObjectHideFlags: 1

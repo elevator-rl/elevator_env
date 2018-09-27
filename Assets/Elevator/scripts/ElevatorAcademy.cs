@@ -19,6 +19,7 @@ public class ElevatorAcademy : Academy
     public static float open;
     public static float close;
     public static float turn;
+    public static int capacity;
 
 
 
@@ -49,6 +50,7 @@ public class ElevatorAcademy : Academy
         open = resetParameters["open"];
         close = resetParameters["close"];
         turn = resetParameters["turn"];
+        capacity = (int)resetParameters["capacity"];
 
 
 
