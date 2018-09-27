@@ -142,7 +142,21 @@ public class Building : MonoBehaviour
 
         int[] floorPassinger = new int[listFloor.Count];
 
-        floorPassinger[0] = newPassinger;
+
+        
+
+        floorPassinger[0] = Random.Range(0, (int)(newPassinger*0.8f));
+
+        int rest = newPassinger - floorPassinger[0];
+
+
+        while(rest>1)
+        {
+            int floor = Random.Range(1, listFloor.Count);
+            int passinger = Random.Range(1, rest + 1);
+            rest -= passinger;
+            floorPassinger[floor] = passinger;
+        }
 
         restPassinger -= newPassinger;
 
@@ -170,14 +184,14 @@ public class Building : MonoBehaviour
     }
 
 
-    public void CallRequest(int floor, MOVE_DIR dir)
+    public void CallRequest(int floor, MOVE_STATE dir)
     {
       
         switch(elevatorBrain.brainType)
         {
             case BrainType.Player:
             case BrainType.Heuristic:
-                SearchNearstElevator(floor, dir);
+                SearchRuleBaseNearstElevator(floor, dir);
                 break;
 
             case BrainType.External:
@@ -191,14 +205,26 @@ public class Building : MonoBehaviour
         
     }
 
-    public int SearchNearstElevator(int floor,MOVE_DIR dir)
+    public void ProcRuleBaseCallRequest()
+    {
+        foreach(var f in listFloor)
+        {
+            for(int i = (int)MOVE_STATE.Down;i< (int)MOVE_STATE.end;++i)
+            {
+                SearchRuleBaseNearstElevator(f.GetFloorNo(), (MOVE_STATE)i);
+            }
+        }
+
+    }
+
+    public int SearchRuleBaseNearstElevator(int floor,MOVE_STATE dir)
     {
 
         float min = 1000000f;
         float dist = 0;
         int buttonDir = 0;
 
-        if(dir != MOVE_DIR.Down)
+        if(dir != MOVE_STATE.Down)
         {
             buttonDir = 1;
         }
@@ -225,6 +251,28 @@ public class Building : MonoBehaviour
         return -1;
     }
 
+    public Buildfloor GetFloor(int floor)
+    {
+
+        return listFloor[floor];
+
+    }
+
+    public MOVE_STATE GetAction(int floor,ElevatorAgent el)
+    {
+        return MOVE_STATE.Stop;
+    }
+
+    public bool IsNoCallRequest()
+    {
+        foreach (var f in listFloor)
+        {
+            if (!f.IsNoCall())
+                return false;
+        }
+
+        return true;
+    }
 
     private void OnGUI()
     {

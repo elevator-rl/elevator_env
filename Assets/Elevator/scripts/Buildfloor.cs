@@ -6,9 +6,8 @@ using TMPro;
 public class Buildfloor : MonoBehaviour
 {
 
-  
-    public TextMeshPro textUp;
-    public TextMeshPro textDn;
+
+    public TextMeshPro[] textCallButton = new TextMeshPro[(int)MOVE_STATE.end];
     public TextMeshPro textPassinger;
     public TextMeshPro textFloor;
 
@@ -19,10 +18,11 @@ public class Buildfloor : MonoBehaviour
 
     public List<ElevatorAgent> LandingElevators = new List<ElevatorAgent>();
 
+    public ElevatorAgent[] callReservedEl = new ElevatorAgent[(int)MOVE_STATE.end];
+
     int floorNo;
     int passingerCount = 0;
-    bool upButton = false;
-    bool downButton = false;
+   
 
     static float checkInterval = 1;
 
@@ -41,7 +41,32 @@ public class Buildfloor : MonoBehaviour
         if ((Time.fixedTime-checkTime)>1f)
             ChkUpDownButton();
 
+    }
 
+    public int GetFloorNo()
+    {
+        return floorNo;
+    }
+
+    
+    public bool IsCallRequest(MOVE_STATE dir)
+    {
+        if (textCallButton[(int)dir] == null
+            || !textCallButton[(int)dir].gameObject.activeSelf)
+            return false;
+
+
+        return true;
+
+    }
+
+    public bool IsNoCall()
+    {
+        if (textCallButton[(int)MOVE_STATE.Down].gameObject.activeSelf
+            || textCallButton[(int)MOVE_STATE.Up].gameObject.activeSelf)
+            return false;
+
+        return true;
     }
 
     public void SetFloor(int floor,Building building_)
@@ -52,15 +77,6 @@ public class Buildfloor : MonoBehaviour
 
     }
 
-    public  void OnUpButton(bool bOn = true)
-    {
-        textUp.gameObject.SetActive(bOn);
-    }
-
-    public void OnDownButton(bool bOn = true)
-    {
-        textDn.gameObject.SetActive(bOn);
-    }
 
 
     public void SetPassinger(int passinger)
@@ -93,35 +109,17 @@ public class Buildfloor : MonoBehaviour
         ChkUpDownButton();
     }
 
-    public void UpButton( bool bOn)
-    {
-        textUp.gameObject.SetActive(bOn);
-  
-        if (bOn)
-        {
-            building.CallRequest(floorNo, MOVE_DIR.Up);
-        }
-        
-        upButton = bOn;
-    }
 
-    public void DownButton(bool bOn)
+    public void SetButton(MOVE_STATE dir,bool bOn)
     {
-        textDn.gameObject.SetActive(bOn);
-
+        textCallButton[(int)dir].gameObject.SetActive(bOn);
 
         if (bOn)
-        {
-            building.CallRequest(floorNo, MOVE_DIR.Down);
-        }
-
-        downButton = bOn;
+            building.CallRequest(floorNo, dir);
     }
-
 
     public void ChkUpDownButton()
     {
-
         bool up = false, dn = false;
 
         foreach(var p in listPassinger)
@@ -136,9 +134,8 @@ public class Buildfloor : MonoBehaviour
             }
         }
 
-        UpButton(up);
-        DownButton(dn);
-
+        SetButton(MOVE_STATE.Up, up);
+        SetButton(MOVE_STATE.Down, dn);
 
         checkTime = Time.fixedTime;
 
@@ -147,7 +144,7 @@ public class Buildfloor : MonoBehaviour
     public void EnterElevator(ElevatorAgent el)
     {
 
-        if (floorNo != el.GetFloor() || !el.IsEnterableState())
+        if (floorNo != (int)el.GetFloor() || !el.IsEnterableState())
             return;
 
         float delay=0;
@@ -172,17 +169,13 @@ public class Buildfloor : MonoBehaviour
 
         textPassinger.text = listPassinger.Count.ToString();
 
-
-        if(el.GetDir() == (int)MOVE_DIR.Up)
-            UpButton(false);
-        else
-            DownButton(false);
-
-
+       
         LandingElevators.Add(el);
         return;
 
     }
+
+   
 
    
 
