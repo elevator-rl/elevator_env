@@ -6,7 +6,7 @@ public class ElevatorPassenger:  PoolObj<ElevatorPassenger>
 {
 
     public int startFloor,destFloor;
-
+    public float timeWaiting;
 
     public ElevatorPassenger()
     {
@@ -24,6 +24,8 @@ public class ElevatorPassenger:  PoolObj<ElevatorPassenger>
     {
         startFloor = start;
         destFloor = dest;
+
+        timeWaiting = Time.fixedTime;
 
     }
 

@@ -84,6 +84,8 @@ public class ElevatorAgent : Agent
     float currentMoveSpeed;
 
 
+    MOVE_STATE recv_action;
+
    
 
     delegate void ElevatorAction();
@@ -224,6 +226,12 @@ public class ElevatorAgent : Agent
     }
 
 
+    public override void AgentReset()
+    {
+        base.AgentReset();
+
+    }
+
     public override void CollectObservations()
     {
         //for (int i = 0; i < brain.brainParameters.vectorObservationSize; ++i)
@@ -244,72 +252,53 @@ public class ElevatorAgent : Agent
 
     }
 
-    /*
-    public override void SendInfoToBrain()
-    {
-        if (brain == null)
-        {
-            return;
-        }
-        s
-        info.memories = action.memories;
-        info.storedVectorActions = action.vectorActions;
-        info.storedTextActions = action.textActions;
-        info.vectorObservation.Clear();
-        actionMasker.ResetMask();
-        CollectObservations();
-        info.actionMasks = actionMasker.GetMask();
-
-        BrainParameters param = brain.brainParameters;
-        if (info.vectorObservation.Count != param.vectorObservationSize)
-        {
-            throw new UnityAgentsException(string.Format(
-                "Vector Observation size mismatch between continuous " +
-                "agent {0} and brain {1}. " +
-                "Was Expecting {2} but received {3}. ",
-                gameObject.name, brain.gameObject.name,
-                brain.brainParameters.vectorObservationSize,
-                info.vectorObservation.Count));
-        }
-
-        info.stackedVectorObservation.RemoveRange(
-            0, param.vectorObservationSize);
-        info.stackedVectorObservation.AddRange(info.vectorObservation);
-
-        info.visualObservations.Clear();
-        if (param.cameraResolutions.Length > agentParameters.agentCameras.Count)
-        {
-            throw new UnityAgentsException(string.Format(
-                "Not enough cameras for agent {0} : Bain {1} expecting at " +
-                "least {2} cameras but only {3} were present.",
-                gameObject.name, brain.gameObject.name,
-                brain.brainParameters.cameraResolutions.Length,
-                agentParameters.agentCameras.Count));
-        }
-
-        for (int i = 0; i < brain.brainParameters.cameraResolutions.Length; i++)
-        {
-            ObservationToTexture(
-                agentParameters.agentCameras[i],
-                param.cameraResolutions[i].width,
-                param.cameraResolutions[i].height,
-                ref textureArray[i]);
-            info.visualObservations.Add(textureArray[i]);
-        }
-
-        info.reward = reward;
-        info.done = done;
-        info.maxStepReached = maxStepReached;
-        info.id = id;
-
-        brain.SendState(this, info);
-        info.textObservation = "";
-    }
-    */
+ 
 
     // to be implemented by the developer
     public override void AgentAction(float[] vectorAction, string textAction)
     {
+        recv_action = (MOVE_STATE)Mathf.FloorToInt(vectorAction[0]);
+
+        switch(recv_action)
+        {
+            case MOVE_STATE.Stop:
+                fsm.StateTransition(Event.DecelerateStart);
+
+                return;
+                break;
+
+            case MOVE_STATE.Down:
+
+                if(GetMoveState() != recv_action)
+                {
+                    if(currentMoveSpeed>0)  //이동
+                    {
+                        AddReward(-0.01f);
+                        return;
+                    }
+                }
+
+
+                SetDirction(recv_action);
+                fsm.StateTransition(Event.Call);
+                break;
+
+            case MOVE_STATE.Up:
+
+                if (GetMoveState() != recv_action)
+                {
+                    if (currentMoveSpeed > 0)  //이동
+                    {
+                        AddReward(-0.01f);
+                        return;
+                    }
+                }
+
+
+                SetDirction(recv_action);
+                fsm.StateTransition(Event.Call);
+                break;
+        }
 
 
     }
@@ -393,14 +382,14 @@ public class ElevatorAgent : Agent
         {
             car.transform.position = listFloor[listFloor.Length - 1].transform.position;
             SetDirction(MOVE_STATE.Down);
-            coolTime = preUpdateTime + ElevatorAcademy.turn;
+           // coolTime = preUpdateTime + ElevatorAcademy.turn;
 
         }
         else if (car.transform.position.y <= listFloor[0].transform.position.y)
         {
             car.transform.position = listFloor[0].transform.position;
             SetDirction(MOVE_STATE.Up);
-            coolTime = preUpdateTime + ElevatorAcademy.turn;
+            //coolTime = preUpdateTime + ElevatorAcademy.turn;
         }
 
         currentFloor = (car.transform.localPosition.y / ElevatorAcademy.height);
@@ -523,6 +512,9 @@ public class ElevatorAgent : Agent
         SetDirction(MOVE_STATE.Stop);
         currentMoveSpeed = 0;
 
+        SetTransitionDelay(Event.None, 0.5f);
+        RequestAction();
+
     }
 
     public void Accelate()
@@ -628,6 +620,10 @@ public class ElevatorAgent : Agent
             {
                 listPassinger.RemoveAt(idx);
                 boardingDelay += Random.Range(0.6f, 1.0f);
+
+                float refTime = Mathf.Abs((p.startFloor - p.destFloor) * (ElevatorAcademy.height) / ElevatorAcademy.speed/2f);
+                AddReward(refTime / (Time.fixedTime - p.timeWaiting));
+
                 p.Dispose();
             }
             else
@@ -800,12 +796,18 @@ public class ElevatorAgent : Agent
             listPassinger.Add(p);
             SetTransitionDelay(Event.DoorCloseStart, Random.Range(0.6f, 1.0f),true);         
             SetFloorButton(p.destFloor, true);
+
+            AddReward(0.5f / (Time.fixedTime - p.timeWaiting));
+            p.timeWaiting = Time.fixedTime;
         }
         else if (GetMoveState() == MOVE_STATE.Down && p.destFloor < GetFloor())
         {
             listPassinger.Add(p);
             SetTransitionDelay(Event.DoorCloseStart, Random.Range(0.6f, 1.0f), true);
             SetFloorButton(p.destFloor, true);
+
+            AddReward(0.5f / (Time.fixedTime - p.timeWaiting));
+            p.timeWaiting = Time.fixedTime;
         }
         else  
         {
@@ -823,7 +825,6 @@ public class ElevatorAgent : Agent
             || brain.brainType == BrainType.Player)
         {
 
-  
             if(fsm.GetCurrentState() == State.NormalMove)
             {
                 var f = building.GetFloor(floor);
@@ -863,7 +864,9 @@ public class ElevatorAgent : Agent
 
             return;
         }
-        
+
+
+        RequestAction();
 
 
     }

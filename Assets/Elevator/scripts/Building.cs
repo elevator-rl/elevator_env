@@ -113,6 +113,55 @@ public class Building : MonoBehaviour
 
     }
 
+    public void Reset()
+    {
+
+        restPassinger = ElevatorAcademy.passinger;
+
+
+        int dist = 4;
+        int rest = ElevatorAcademy.elevatorCount % 2;
+        int mok = ElevatorAcademy.elevatorCount / 2;
+
+        Vector3 startPos = transform.position;
+        if (rest < 0.5f)
+        {
+            mok -= 1;
+            startPos = transform.position - (Vector3.right * dist * mok) - (Vector3.right * (dist / 2));
+        }
+        else
+        {
+            startPos = transform.position - (Vector3.right * dist * mok);
+        }
+
+        startPos += Vector3.back;
+
+
+        for (int i = listElve.Count; i < ElevatorAcademy.elevatorCount; ++i)
+        {
+            GameObject ele = (GameObject)Instantiate(resElevator, this.transform);
+            ele.transform.position = startPos + (Vector3.right * dist * i);
+
+            var agent = ele.GetComponent<ElevatorAgent>();
+            listElve.Add(agent);
+            agent.GiveBrain(elevatorBrain);
+            agent.InitFloor(i, ElevatorAcademy.floors);
+            agent.agentParameters.agentCameras[0] = GameObject.Find("agent_cam").GetComponent<Camera>();
+            agent.AgentReset();
+
+        }
+
+        for (int i = 0; i < ElevatorAcademy.floors; ++i)
+        {
+            GameObject fl = (GameObject)Instantiate(resfloor, this.transform);
+            fl.transform.position = transform.position + (Vector3.up * ElevatorAcademy.height * i);
+            fl.GetComponent<Buildfloor>().SetFloor(i, this);
+            listFloor.Add(fl.GetComponent<Buildfloor>());
+
+        }
+
+    }
+
     public void UpdateEnv()
     {
 

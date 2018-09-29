@@ -58,6 +58,12 @@ public class ElevatorAcademy : Academy
         building.InitEnv();
     }
 
+    public override void AcademyReset()
+    {
+     
+
+    }
+
     public override void AcademyStep()
     {
         building.UpdateEnv();

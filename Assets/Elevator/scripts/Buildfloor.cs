@@ -20,6 +20,8 @@ public class Buildfloor : MonoBehaviour
 
     public ElevatorAgent[] callReservedEl = new ElevatorAgent[(int)MOVE_STATE.end];
 
+    
+
     int floorNo;
     int passingerCount = 0;
    
@@ -115,7 +117,10 @@ public class Buildfloor : MonoBehaviour
         textCallButton[(int)dir].gameObject.SetActive(bOn);
 
         if (bOn)
+        {
             building.CallRequest(floorNo, dir);
+
+        }
     }
 
     public void ChkUpDownButton()
