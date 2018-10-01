@@ -45,9 +45,33 @@ public class Buildfloor : MonoBehaviour
 
     }
 
+    public void Init()
+    {
+        while( listPassinger.Count>0)
+        {
+            var p = listPassinger[0];
+            p.Dispose();
+            listPassinger.RemoveAt(0);
+
+        }
+
+        passingerCount = 0;
+        textPassinger.text = passingerCount.ToString();
+
+        SetButton(MOVE_STATE.Up, false);
+        SetButton(MOVE_STATE.Down, false);
+
+        checkTime = Time.fixedTime;
+    }
+
     public int GetFloorNo()
     {
         return floorNo;
+    }
+
+    public int GetPassingerCount()
+    {
+        return passingerCount;
     }
 
     

@@ -568,7 +568,7 @@ MonoBehaviour:
   agentParameters:
     agentCameras:
     - {fileID: 0}
-    maxStep: 0
+    maxStep: 2000
     resetOnDone: 1
     onDemandDecision: 1
     numberOfActionsBetweenDecisions: 1

@@ -56,7 +56,6 @@ public class ElevatorAgent : Agent
     public bool[] floorBtnflag;
 
     MOVE_STATE moveDirState;            //이동 상태방향 여부(-1,0,1) 아래,멈춤,위
-    bool bOpendDoor;                    //문열린상태
     float currentFloor;                 //현재엘베가 있는 층수
     int nextFloor;
 
@@ -86,8 +85,7 @@ public class ElevatorAgent : Agent
 
     MOVE_STATE recv_action;
 
-   
-
+  
     delegate void ElevatorAction();
 
     ElevatorAction[] elevatorAction = new ElevatorAction[(int)Event.End];
@@ -98,6 +96,11 @@ public class ElevatorAgent : Agent
 
     Event nextEvent = Event.None;
     float nextTransitionTime =0;
+
+
+    State reqState = State.Ready;
+    int reqfloor = -1;
+    float reqTime = 0;
 
 
     public int GetNo()
@@ -128,10 +131,10 @@ public class ElevatorAgent : Agent
         {
             callRequstFloor[i] = -1;
         }
-
+        textPassinger.text = listPassinger.Count.ToString();
 
         InitFsmFunc();
-        Init();
+       
     }
 
     public void InitFsmFunc()
@@ -165,9 +168,43 @@ public class ElevatorAgent : Agent
 
     }
 
+
     public void Init()
     {
+
+        while (listPassinger.Count > 0)
+        {
+            var p = listPassinger[0];
+            p.Dispose();
+            listPassinger.RemoveAt(0);
+
+        }
+
         textPassinger.text = listPassinger.Count.ToString();
+
+        for (int i=0;i< floorBtnflag.Length;++i)
+        {
+            floorBtnflag[i] = false;
+            listFloor[i].GetComponent<VerticalLine>().SetDestResquest(false);
+        }
+
+
+        currentMoveSpeed=0;
+        recv_action = MOVE_STATE.Stop;
+        SetDirction(recv_action);
+    
+        nextEvent = Event.None;
+        nextTransitionTime = 0;
+        fsm.SetCurrentState(State.Ready);
+
+
+        reqState = State.Ready;
+        reqfloor = -1;
+        reqTime = 0;
+
+
+        SetPosFloor(Random.Range(0, ElevatorAcademy.floors));
+
     }
 
     public void InitFloor(int no, int floors)
@@ -240,7 +277,22 @@ public class ElevatorAgent : Agent
         ///옵저베이션정보 설정
         ///
 
-        AddVectorObs(GetFloor());   ///헌재 층수
+        AddVectorObs(building.GetRestPassinger());  //남은 승객수
+
+        for(int i=0;i<ElevatorAcademy.floors;++i)
+        {
+            var f= building.GetFloor(i);
+            AddVectorObs(f.GetPassingerCount());
+            AddVectorObs(f.IsCallRequest(MOVE_STATE.Down));
+            AddVectorObs(f.IsCallRequest(MOVE_STATE.Up));
+        }
+
+
+        int floor, nextfloor;
+        GetFloor(out floor, out nextfloor);
+
+        AddVectorObs(floor);   ///헌재 층수
+        AddVectorObs(nextfloor);   ///다음층수
         AddVectorObs((int)GetMoveState());  ///이동방향
         AddVectorObs((int)fsm.GetCurrentState());
         AddVectorObs(listPassinger.Count);
@@ -257,41 +309,119 @@ public class ElevatorAgent : Agent
     // to be implemented by the developer
     public override void AgentAction(float[] vectorAction, string textAction)
     {
+
+        AddReward(-0.01f);
         recv_action = (MOVE_STATE)Mathf.FloorToInt(vectorAction[0]);
 
-        switch(recv_action)
+
+        int floor, nextfloor;
+        GetFloor(out floor, out nextfloor);
+
+        switch (recv_action)
         {
             case MOVE_STATE.Stop:
+               
+
+                {
+                  
+
+                    if(fsm.GetCurrentState() == State.NormalMove)
+                    {
+                        var f = building.GetFloor(nextfloor);
+
+                        if (!floorBtnflag[nextfloor] && f.listPassinger.Count == 0)
+                            AddReward(-0.01f);
+                       
+                      
+                    }
+                    else if (fsm.GetCurrentState() == State.Ready)
+                    {
+                        var f = building.GetFloor(nextfloor);
+
+                       
+                        while (true&& f.listPassinger.Count>0)
+                        {
+                            MOVE_STATE dir = (MOVE_STATE)Random.Range((int)MOVE_STATE.Down, (int)MOVE_STATE.end);
+
+                            if(f.IsCallRequest(dir))
+                            {
+
+                                fsm.StateTransition(Event.DoorOpenRequest);
+                                SetDirction(dir);
+                                return;
+                            }
+                        }
+                        
+                    }
+                }
+
                 fsm.StateTransition(Event.DecelerateStart);
 
                 return;
                 break;
 
             case MOVE_STATE.Down:
+                
+                if (floor == 0)
+                {
+                    AddReward(-0.005f);
+                    return;       
+                }
+
 
                 if(GetMoveState() != recv_action)
                 {
-                    if(currentMoveSpeed>0)  //이동
+                    if(currentMoveSpeed>0.0f)  //이동
                     {
-                        AddReward(-0.01f);
+                        AddReward(-0.005f);
                         return;
                     }
                 }
 
+                
 
-                SetDirction(recv_action);
-                fsm.StateTransition(Event.Call);
+                {
+
+  
+
+                    SetDirction(recv_action);
+                    fsm.StateTransition(Event.Call);
+                }
+
                 break;
 
             case MOVE_STATE.Up:
 
+               
+                if (floor == (ElevatorAcademy.floors-1))
+                {             
+                    AddReward(-0.005f);
+                                             
+                }
+
+                
                 if (GetMoveState() != recv_action)
                 {
-                    if (currentMoveSpeed > 0)  //이동
+                    if (currentMoveSpeed > 0.0f)  //이동
                     {
-                        AddReward(-0.01f);
+                        AddReward(-0.005f);
                         return;
                     }
+                }
+
+                
+
+
+                {
+
+                   
+
+ //                   if (!floorBtnflag[nextfloor] && f.listPassinger.Count == 0)
+ //                       AddReward(0.005f);
+
+
+                    SetDirction(recv_action);
+                    fsm.StateTransition(Event.Call);
                 }
 
 
@@ -396,9 +526,11 @@ public class ElevatorAgent : Agent
 
     }
 
-    public void CheckFloor()
+    public void GetFloor(out int floor, out int nextfloor)
     {
-        int floor = -1, nextfloor = -1;
+        floor = -1;
+        nextfloor = -1;
+
 
         switch ((MOVE_STATE)moveDirState)
         {
@@ -418,47 +550,67 @@ public class ElevatorAgent : Agent
                 break;
         }
 
+       
+    }
+
+    public void CheckFloor()
+    {
+        int floor = -1, nextfloor = -1;
+
+        GetFloor(out floor,out nextfloor);
 
         if (floor == nextfloor)
             return;
 
-  
-        if (!floorBtnflag[nextfloor])
-        {
-            RequstAction(nextfloor);
-        }
-        else if (fsm.GetCurrentState() != State.Decelerate)
-        {
-            fsm.StateTransition(Event.DecelerateStart);
-        }
 
-        else if(callRequstFloor[(int)moveDirState] == nextfloor)
+
+ //       if (brain.brainType == BrainType.Heuristic
+ //                  || brain.brainType == BrainType.Player)
         {
-            fsm.StateTransition(Event.DecelerateStart);
+
+            if (!floorBtnflag[nextfloor])
+            {
+                RequstAction(nextfloor);
+            }
+            else if (fsm.GetCurrentState() != State.Decelerate)
+            {
+                fsm.StateTransition(Event.DecelerateStart);
+            }
+
+            else if (callRequstFloor[(int)moveDirState] == nextfloor)
+            {
+                fsm.StateTransition(Event.DecelerateStart);
+                return;
+            }
+
+
+            if (listPassinger.Count > 0)
+                return;
+
+
+            bool find = false;
+            if (moveDirState == MOVE_STATE.Up)
+            {
+                find = callRequstFloor[(int)MOVE_STATE.Down] == nextfloor;
+            }
+            else
+            {
+                find = callRequstFloor[(int)MOVE_STATE.Up] == nextfloor;
+            }
+
+
+            if (find)
+            {
+                fsm.StateTransition(Event.DecelerateStart);
+            }
+
             return;
         }
 
 
-        if (listPassinger.Count > 0)
-            return;
 
-        
-        bool find = false;
-        if (moveDirState == MOVE_STATE.Up)
-        {
-            find = callRequstFloor[(int)MOVE_STATE.Down]== nextfloor;
-        }
-        else
-        {
-            find = callRequstFloor[(int)MOVE_STATE.Up] == nextfloor;
-        }
+        RequestDecision();
 
-
-        if (find)
-        {     
-            fsm.StateTransition(Event.DecelerateStart);
-        }
-        
     }
 
     public float GetFloor()
@@ -512,8 +664,10 @@ public class ElevatorAgent : Agent
         SetDirction(MOVE_STATE.Stop);
         currentMoveSpeed = 0;
 
-        SetTransitionDelay(Event.None, 0.5f);
-        RequestAction();
+        SetTransitionDelay(Event.End, 0.5f);
+        RequstAction((int)GetFloor());
+
+       
 
     }
 
@@ -545,7 +699,10 @@ public class ElevatorAgent : Agent
         if(Mathf.Abs(dist)< currentMoveSpeed*Time.fixedDeltaTime)
         {
             car.transform.position = new Vector3(car.transform.position.x, listFloor[nextfloor].transform.position.y, car.transform.position.z);
+
+            currentFloor = (car.transform.localPosition.y / ElevatorAcademy.height);
             fsm.StateTransition(Event.Arrived);
+           
             currentMoveSpeed = 0;
             return;
         }
@@ -568,14 +725,16 @@ public class ElevatorAgent : Agent
         {
             fsm.StateTransition(Event.DoorOpenRequest);
         }
-        else
+        else if(listPassinger.Count==0)
         {      
             fsm.StateTransition(Event.EmptyPassinger);
         }
+        else
+        {
+            fsm.StateTransition(Event.DoorOpenRequest);
+        }
 
         SetFloorButton(floor, false);
-
-       
 
     }
 
@@ -623,8 +782,10 @@ public class ElevatorAgent : Agent
 
                 float refTime = Mathf.Abs((p.startFloor - p.destFloor) * (ElevatorAcademy.height) / ElevatorAcademy.speed/2f);
                 AddReward(refTime / (Time.fixedTime - p.timeWaiting));
+                AddReward(0.0001f);
 
                 p.Dispose();
+                building.AddDestPassinger();
             }
             else
             {
@@ -633,7 +794,9 @@ public class ElevatorAgent : Agent
         }
 
         SetTransitionDelay(Event.DoorCloseStart, boardingDelay);
-     
+        
+
+
     }
 
     public void DoorClosing()
@@ -791,13 +954,15 @@ public class ElevatorAgent : Agent
         if (listPassinger.Count >= ElevatorAcademy.capacity)
             return false;
 
+        AddReward(0.001f);
+
         if (GetMoveState() == MOVE_STATE.Up && p.destFloor > GetFloor())
         {
             listPassinger.Add(p);
             SetTransitionDelay(Event.DoorCloseStart, Random.Range(0.6f, 1.0f),true);         
             SetFloorButton(p.destFloor, true);
 
-            AddReward(0.5f / (Time.fixedTime - p.timeWaiting));
+            AddReward(5f/ (Time.fixedTime - p.timeWaiting));
             p.timeWaiting = Time.fixedTime;
         }
         else if (GetMoveState() == MOVE_STATE.Down && p.destFloor < GetFloor())
@@ -806,7 +971,7 @@ public class ElevatorAgent : Agent
             SetTransitionDelay(Event.DoorCloseStart, Random.Range(0.6f, 1.0f), true);
             SetFloorButton(p.destFloor, true);
 
-            AddReward(0.5f / (Time.fixedTime - p.timeWaiting));
+            AddReward(1f / (Time.fixedTime - p.timeWaiting));
             p.timeWaiting = Time.fixedTime;
         }
         else  
@@ -866,8 +1031,24 @@ public class ElevatorAgent : Agent
         }
 
 
-        RequestAction();
+        if(fsm.GetCurrentState() == State.Ready)
+        {
+            if (Time.fixedTime - reqTime < 0.5f)
+                return;
+        }
+        else
+        {
+            if (reqState == fsm.GetCurrentState() && reqfloor == floor)
+                return;
 
+        }
+
+
+        RequestDecision();
+
+        reqState = fsm.GetCurrentState();
+        reqfloor = floor;
+        reqTime = Time.fixedTime;
 
     }
 

@@ -28,7 +28,7 @@ public class FiniteState< EVENT,STATE >
         STATE outState;
 
         if (!mapTransition.TryGetValue(inputEvent, out outState))
-            return default(STATE);
+            return GetStateID();
 
         return outState;
     }
@@ -77,9 +77,9 @@ public class Fsm<EVENT, STATE>
         FiniteState<EVENT, STATE> State;
 
         if (mapState.TryGetValue(GetCurrentState(), out State))
-            return State.OutputState(inputEvent);
+            return State.GetStateID();
 
-        return default(STATE);
+        return GetCurrentState();
     }
 
     public void SetCurrentState(STATE stateID)

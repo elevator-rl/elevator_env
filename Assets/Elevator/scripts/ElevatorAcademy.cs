@@ -60,8 +60,7 @@ public class ElevatorAcademy : Academy
 
     public override void AcademyReset()
     {
-     
-
+        building.InitEnv();
     }
 
     public override void AcademyStep()
