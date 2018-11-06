@@ -32,6 +32,7 @@ public class Building : MonoBehaviour
     int destPassinger;
     int addPassinger;
 
+
     public AnimationCurve simuPassinger;
 
     
@@ -41,6 +42,7 @@ public class Building : MonoBehaviour
     float startTime = 0;
 
     int success = 0;
+    int fail = 0;
 
     // Update is called once per frame
     void Update () {
@@ -165,8 +167,19 @@ public class Building : MonoBehaviour
             return;
         }
 
-     
-      
+        if (academy.GetStepCount() + 1 == academy.maxSteps)
+        {
+            foreach (var el in listElve)
+            {
+                el.SetReward(-(GetRestPassinger()*0.1f));
+                fail += 1;
+                academy.Done();
+            }
+
+        }
+
+
+
     }
 
     public void UpdatePos()

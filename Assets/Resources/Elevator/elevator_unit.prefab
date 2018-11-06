@@ -568,10 +568,10 @@ MonoBehaviour:
   agentParameters:
     agentCameras:
     - {fileID: 0}
-    maxStep: 2000
+    maxStep: 0
     resetOnDone: 1
     onDemandDecision: 1
-    numberOfActionsBetweenDecisions: 1
+    numberOfActionsBetweenDecisions: 10
   floorBtnflag: 
   listFloor: []
   up: {fileID: 1896863367406486}
