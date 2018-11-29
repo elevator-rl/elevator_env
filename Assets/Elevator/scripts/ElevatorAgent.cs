@@ -799,7 +799,17 @@ public class ElevatorAgent : Agent
 
     public void Decelerate()
     {
-        int nextfloor = Mathf.RoundToInt(currentFloor);
+        int nextfloor;
+
+        if(GetMoveState() == MOVE_STATE.Up)
+        {
+            nextfloor = (int)(currentFloor) + 1;
+        }
+        else
+        {
+            nextfloor = (int)currentFloor;
+        }
+        
 
         float dist = listFloor[nextfloor].transform.position.y - car.transform.position.y;
 
@@ -837,11 +847,11 @@ public class ElevatorAgent : Agent
 
             if(GetMoveState() == MOVE_STATE.Down)
             {
-                moveDirState = MOVE_STATE.Up;
+                SetDirction(MOVE_STATE.Up);
             }
             else
             {
-                moveDirState = MOVE_STATE.Down;
+                SetDirction(MOVE_STATE.Down);
             }
 
             fsm.StateTransition(Event.DoorOpenRequest);     
